@@ -7,7 +7,6 @@ android {
 }
 
 dependencies {
-    testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
+    api(libs.junit)
+    api(libs.kotlinx.coroutines.test)
 }
-

@@ -50,12 +50,17 @@ The goal is a production-ready starter template baseline that is reproducible, d
 - [x] Ensure repo hygiene is in place:
   - [x] `.idea/` ignored in `.gitignore`
   - [x] `.gitattributes` enforces LF (CRLF allowlist for Windows scripts)
-- [ ] Capture “before” build baseline (record results here):
-  - [ ] `./gradlew :app:assembleDebug`
-  - [ ] `./gradlew test` (or `:app:testDebugUnitTest`)
+- [x] Capture “before” build baseline (record results here):
+  - [x] `./gradlew :app:assembleDebug`
+  - [x] `./gradlew test` (or `:app:testDebugUnitTest`)
+
+Results (2026-02-01):
+- `:app:assembleDebug` ✅ (ran via `tool/agent/winrun --no-stdin -- ./gradlew.bat :app:assembleDebug`, ~1m)
+- `:app:testDebugUnitTest` ✅ (ran via `tool/agent/winrun --no-stdin -- ./gradlew.bat :app:testDebugUnitTest`, ~4s)
+- Note: current WSL environment has no Linux JDK; Windows Gradle wrapper is the baseline execution path.
 
 Checkpoint:
-- [ ] Baseline results recorded in this doc (success/fail + notes).
+- [x] Baseline results recorded in this doc (success/fail + notes).
 
 ---
 
@@ -63,22 +68,22 @@ Checkpoint:
 
 Goal: make module creation consistent and remove Gradle copy/paste across app clones.
 
-- [ ] Add included build: `build-logic/` and wire via `settings.gradle.kts` (`includeBuild("build-logic")`).
-- [ ] Create convention plugins (minimal, production-grade):
-  - [ ] `android-application`
-  - [ ] `android-library`
-  - [ ] `android-feature`
-  - [ ] `compose`
-  - [ ] `hilt`
-- [ ] Centralize common Android config in plugins:
-  - [ ] JDK 17 toolchain
-  - [ ] `compileSdk`, `minSdk`, `targetSdk` rules
-  - [ ] consistent Kotlin/Compose configuration
-- [ ] Codify annotation processing choice (KSP/KAPT) in `hilt` plugin.
+- [x] Add included build: `build-logic/` and wire via `settings.gradle.kts` (`includeBuild("build-logic")`).
+- [x] Create convention plugins (minimal, production-grade):
+  - [x] `android-application` (`androidcorekit.android.application`)
+  - [x] `android-library` (`androidcorekit.android.library`)
+  - [x] `android-feature` (`androidcorekit.android.feature`)
+  - [x] `compose` (`androidcorekit.compose`)
+  - [x] `hilt` (`androidcorekit.hilt`)
+- [x] Centralize common Android config in plugins:
+  - [x] JDK 17 toolchain
+  - [x] `compileSdk`, `minSdk`, `targetSdk` rules
+  - [x] consistent Kotlin/Compose configuration
+- [x] Codify annotation processing choice (KSP/KAPT) in `hilt` plugin.
 
 Checkpoint:
-- [ ] `./gradlew help` works with included build enabled.
-- [ ] A sample module applies convention plugins successfully.
+- [x] `./gradlew help` works with included build enabled.
+- [x] A sample module applies convention plugins successfully (`:app`).
 
 ---
 

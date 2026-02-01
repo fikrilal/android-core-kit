@@ -93,32 +93,34 @@ Goal: establish module graph and stable “core contracts” before feature work
 
 ### 2.1 Add modules + Gradle wiring
 
-- [ ] Add modules and include them in `settings.gradle.kts`:
-  - [ ] `:core:common`
-  - [ ] `:core:ui`
-  - [ ] `:core:designsystem`
-  - [ ] `:core:navigation`
-  - [ ] `:core:session`
-  - [ ] `:core:testing`
-  - [ ] `:feature:auth`
-- [ ] Apply convention plugins to each module (no bespoke build.gradle boilerplate).
-- [ ] Wire minimal dependency rules:
-  - [ ] `:feature:*` must not depend on `:feature:*` (add a Gradle guardrail task/check).
+- [x] Add modules and include them in `settings.gradle.kts`:
+  - [x] `:core:common`
+  - [x] `:core:ui`
+  - [x] `:core:designsystem`
+  - [x] `:core:navigation`
+  - [x] `:core:session`
+  - [x] `:core:testing`
+  - [x] `:feature:auth`
+- [x] Apply convention plugins to each module (no bespoke build.gradle boilerplate).
+- [x] Wire minimal dependency rules:
+  - [x] `:feature:*` must not depend on `:feature:*` (Gradle task: `checkFeatureModuleDependencies`).
 
 ### 2.2 Minimal code contracts (compile-first, no backend)
 
-- [ ] `:core:common`:
-  - [ ] `AppResult` + `AppError` baseline types
-  - [ ] `AppDispatchers`/dispatcher provider abstraction for testability
-- [ ] `:core:navigation`:
-  - [ ] `Destination` contract
-  - [ ] `AppDestinations.AuthenticatedRoot` + `UnauthenticatedRoot`
-- [ ] `:core:session`:
-  - [ ] `SessionState` (minimal: authenticated boolean + optional metadata)
-  - [ ] `SessionManager` interface (minimal: state flow + logout)
+- [x] `:core:common`:
+  - [x] `AppResult` + `AppError` baseline types
+  - [x] `AppDispatchers`/dispatcher provider abstraction for testability
+- [x] `:core:navigation`:
+  - [x] `Destination` contract
+  - [x] `AppDestinations.AuthenticatedRoot` + `UnauthenticatedRoot`
+- [x] `:core:session`:
+  - [x] `SessionState` (minimal: unknown/unauthenticated/authenticated + optional metadata)
+  - [x] `SessionManager` interface (state flow + logout)
 
 Checkpoint:
-- [ ] `./gradlew :app:assembleDebug` still works after module extraction.
+- [x] `./gradlew :app:assembleDebug` still works after module extraction.
+  - ✅ ran via `tool/agent/winrun --no-stdin -- ./gradlew.bat :app:assembleDebug`
+  - ✅ ran `tool/agent/winrun --no-stdin -- ./gradlew.bat checkFeatureModuleDependencies`
 
 ---
 

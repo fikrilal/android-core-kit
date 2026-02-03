@@ -35,6 +35,7 @@ Deliverables:
 Exit criteria:
 
 - `./gradlew :app:assembleDevDebug` and `./gradlew :app:assembleProdDebug` succeed.
+  - ✅ ran via `tool/agent/winrun --no-stdin -- ./gradlew.bat :app:assembleDevDebug :app:assembleProdDebug`
 - Minimal `:core:*` modules compile and are dependency-correct.
 
 ### 1) App shell (composition root)
@@ -149,4 +150,3 @@ Exit criteria:
 
 - Backend contracts: `/mnt/c/Development/_CORE/backend-core-kit`
 - Flutter reference implementation: `/mnt/c/Development/_CORE/mobile-core-kit`
-

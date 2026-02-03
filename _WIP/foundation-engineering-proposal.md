@@ -114,9 +114,9 @@ Decision: **KSP-first** (with a safe fallback).
 - `productFlavors`:
   - `dev`
     - `applicationIdSuffix = ".dev"`
-    - `buildConfigField("String", "BASE_URL", "\"https://example.invalid\"")`
+    - `buildConfigField("String", "BASE_URL", "\"https://dev.example.invalid\"")`
   - `prod`
-    - `buildConfigField("String", "BASE_URL", "\"https://example.invalid\"")`
+    - `buildConfigField("String", "BASE_URL", "\"https://prod.example.invalid\"")`
 
 Notes:
 

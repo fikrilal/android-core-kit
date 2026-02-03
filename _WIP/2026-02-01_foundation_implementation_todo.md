@@ -149,18 +149,20 @@ Notes:
 
 Goal: env differences are explicit and centralized; no “BuildConfig everywhere”.
 
-- [ ] Add flavor dimension `env` and flavors `dev` and `prod` (in convention plugin).
-- [ ] Configure `dev`:
-  - [ ] `applicationIdSuffix = ".dev"`
-  - [ ] `BuildConfig.BASE_URL` placeholder
-- [ ] Configure `prod`:
-  - [ ] `BuildConfig.BASE_URL` placeholder
-- [ ] Enforce consumption pattern:
-  - [ ] `ApiConfig` is the single injection surface for base URL (no widespread `BuildConfig` usage).
+- [x] Add flavor dimension `env` and flavors `dev` and `prod` (in convention plugin).
+- [x] Configure `dev`:
+  - [x] `applicationIdSuffix = ".dev"`
+  - [x] `BuildConfig.BASE_URL` placeholder
+- [x] Configure `prod`:
+  - [x] `BuildConfig.BASE_URL` placeholder
+- [x] Enforce consumption pattern:
+  - [x] `ApiConfig` is the single injection surface for base URL (no widespread `BuildConfig` usage).
 
 Checkpoint:
-- [ ] `./gradlew :app:assembleDevDebug`
-- [ ] `./gradlew :app:assembleProdDebug`
+- [x] `./gradlew :app:assembleDevDebug`
+  - ✅ ran via `tool/agent/winrun --no-stdin -- ./gradlew.bat :app:assembleDevDebug`
+- [x] `./gradlew :app:assembleProdDebug`
+  - ✅ ran via `tool/agent/winrun --no-stdin -- ./gradlew.bat :app:assembleProdDebug`
 
 ---
 

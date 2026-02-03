@@ -24,6 +24,11 @@ Tracking docs:
 - Foundation proposal: `_WIP/foundation-engineering-proposal.md`
 - Foundation TODO: `_WIP/2026-02-01_foundation_implementation_todo.md`
 
+## Verification
+
+- Local/CI baseline: `./gradlew verify`
+- WSL convenience wrapper: `tool/agent/winrun --no-stdin -- ./gradlew.bat verify`
+
 ## Architecture
 
 See `docs/android-architecture-guide.md`.

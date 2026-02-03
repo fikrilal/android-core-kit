@@ -7,4 +7,3 @@ interface AppDispatchers {
     val io: CoroutineDispatcher
     val main: CoroutineDispatcher
 }
-

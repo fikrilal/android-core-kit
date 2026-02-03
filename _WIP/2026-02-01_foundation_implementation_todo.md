@@ -170,18 +170,19 @@ Checkpoint:
 
 Goal: production-ready starter means “hard to break”.
 
-- [ ] Add root `verify` task (or plugin) that runs the baseline suite:
-  - [ ] builds (devDebug + prodDebug)
-  - [ ] unit tests
-  - [ ] Android Lint
-  - [ ] formatting/static analysis (once tools are chosen)
-- [ ] Add GitHub Actions workflow:
-  - [ ] cache Gradle
-  - [ ] run `./gradlew verify`
-  - [ ] upload lint/test reports artifacts (minimal)
+- [x] Add root `verify` task that runs the baseline suite:
+  - [x] builds (devDebug + prodDebug)
+  - [x] unit tests
+  - [x] Android Lint
+  - [x] formatting/static analysis (Spotless+ktlint, Detekt)
+- [x] Add GitHub Actions workflow:
+  - [x] cache Gradle (via `gradle/actions/setup-gradle`)
+  - [x] run `./gradlew verify`
+  - [ ] upload lint/test reports artifacts (optional)
 
 Checkpoint:
 - [ ] A PR triggers CI and `verify` passes on CI.
+  - ✅ ran locally via `tool/agent/winrun --no-stdin -- ./gradlew.bat verify`
 
 ---
 

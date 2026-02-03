@@ -15,7 +15,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
             extensions.configure<com.android.build.api.dsl.ApplicationExtension> {
                 buildFeatures.buildConfig = true
 
-                defaultConfig.targetSdk = AndroidConfig.targetSdk
+                defaultConfig.targetSdk = AndroidConfig.TARGET_SDK
                 defaultConfig.testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
                 val envDimension = "env"

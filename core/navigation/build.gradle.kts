@@ -5,4 +5,3 @@ plugins {
 android {
     namespace = "dev.fikril.androidcorekit.core.navigation"
 }
-

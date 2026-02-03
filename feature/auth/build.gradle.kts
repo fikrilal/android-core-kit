@@ -12,4 +12,3 @@ dependencies {
     implementation(project(":core:session"))
     implementation(project(":core:ui"))
 }
-

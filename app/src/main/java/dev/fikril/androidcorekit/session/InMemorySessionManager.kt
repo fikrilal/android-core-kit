@@ -9,17 +9,18 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class InMemorySessionManager @Inject constructor() : SessionManager {
-    private val mutableState = MutableStateFlow<SessionState>(SessionState.Unauthenticated)
+class InMemorySessionManager
+    @Inject
+    constructor() : SessionManager {
+        private val mutableState = MutableStateFlow<SessionState>(SessionState.Unauthenticated)
 
-    override val state: StateFlow<SessionState> = mutableState.asStateFlow()
+        override val state: StateFlow<SessionState> = mutableState.asStateFlow()
 
-    override suspend fun setAuthenticated(userId: String?) {
-        mutableState.value = SessionState.Authenticated(userId = userId)
+        override suspend fun setAuthenticated(userId: String?) {
+            mutableState.value = SessionState.Authenticated(userId = userId)
+        }
+
+        override suspend fun setUnauthenticated() {
+            mutableState.value = SessionState.Unauthenticated
+        }
     }
-
-    override suspend fun setUnauthenticated() {
-        mutableState.value = SessionState.Unauthenticated
-    }
-}
-

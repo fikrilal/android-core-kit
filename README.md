@@ -11,6 +11,8 @@ These are **intentional constraints** for production readiness and consistency a
   - `applicationIdSuffix` (dev only)
   - `BuildConfig.BASE_URL`
 - DI: **Hilt** (app module is the composition root).
+- Annotation processing: **KSP-first** for Hilt.
+  - Current AGP built-in Kotlin requires `android.disallowKotlinSourceSets=false` (temporary workaround; see `gradle.properties`).
 - Toolchain: **JDK 17** + Gradle wrapper (`./gradlew`).
 - Formatting: **Spotless + ktlint** (to be wired into `./gradlew verify`).
 - Static analysis: **Detekt** (to be wired into `./gradlew verify`).

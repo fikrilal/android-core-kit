@@ -1,6 +1,7 @@
 plugins {
     id("androidcorekit.android.application")
     id("androidcorekit.compose")
+    id("androidcorekit.hilt")
 }
 
 android {
@@ -35,6 +36,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.kotlinx.coroutines.android)
 
     testImplementation(project(":core:testing"))
     testImplementation(libs.junit)

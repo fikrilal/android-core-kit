@@ -128,15 +128,20 @@ Checkpoint:
 
 Goal: `:app` composes modules; core remains contracts; app binds implementations.
 
-- [ ] Add `@HiltAndroidApp` application class in `:app`.
-- [ ] Enable Hilt in `:app` via convention plugin.
-- [ ] Add app DI module(s):
-  - [ ] Bind `SessionManager` to an **in-memory** implementation (Foundation only).
-  - [ ] Provide `ApiConfig` (or equivalent) that reads from `BuildConfig.BASE_URL`.
-- [ ] Ensure `:feature:auth` can depend on `:core:session` without circular dependencies.
+- [x] Add `@HiltAndroidApp` application class in `:app`.
+- [x] Enable Hilt in `:app` via convention plugin.
+- [x] Add app DI module(s):
+  - [x] Bind `SessionManager` to an **in-memory** implementation (Foundation only).
+  - [x] Provide `ApiConfig` (or equivalent) that reads from `BuildConfig.BASE_URL`.
+- [x] Ensure `:feature:auth` can depend on `:core:session` without circular dependencies.
 
 Checkpoint:
-- [ ] `./gradlew :app:assembleDebug` is green with Hilt enabled.
+- [x] `./gradlew :app:assembleDebug` is green with Hilt enabled.
+  - ✅ ran via `tool/agent/winrun --no-stdin -- ./gradlew.bat :app:assembleDebug`
+  - ✅ ran via `tool/agent/winrun --no-stdin -- ./gradlew.bat check`
+
+Notes:
+- KSP with AGP built-in Kotlin currently requires `android.disallowKotlinSourceSets=false` (see `gradle.properties`). Treat as temporary and remove once supported.
 
 ---
 

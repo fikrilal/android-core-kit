@@ -208,6 +208,7 @@ Foundation should include a short checklist (README or docs) so cloning is safe 
 - Too many modules too early can slow iteration; we mitigate by keeping `:core:*` minimal and only adding `:core:network/:core:datastore` when needed.
 - Overusing `BuildConfig` directly creates coupling; mitigate with an injected config interface.
 - Convention plugins add upfront complexity; for a starter template, the long-term payoff is high.
+- With AGP built-in Kotlin, KSP currently requires `android.disallowKotlinSourceSets=false` to allow registering generated sources (experimental flag; remove once supported).
 
 ## Open questions (parked for later phases)
 

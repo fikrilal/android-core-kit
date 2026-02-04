@@ -30,12 +30,16 @@ dependencies {
     implementation(project(":core:navigation"))
     implementation(project(":core:session"))
     implementation(project(":feature:auth"))
+    implementation(project(":feature:home"))
+    implementation(project(":feature:profile"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.coroutines.android)
 
     testImplementation(project(":core:testing"))

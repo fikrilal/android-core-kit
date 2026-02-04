@@ -1,4 +1,4 @@
-package dev.fikril.androidcorekit.ui.theme
+package dev.fikril.androidcorekit.core.designsystem.theme
 
 import androidx.compose.ui.graphics.Color
 

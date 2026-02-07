@@ -18,8 +18,8 @@ import dev.fikril.androidcorekit.core.network.client.RetrofitServiceFactory
 import dev.fikril.androidcorekit.core.network.client.StaticApiBaseUrlProvider
 import dev.fikril.androidcorekit.core.network.execution.NetworkCallExecutor
 import dev.fikril.androidcorekit.core.network.telemetry.NetworkTelemetryObserver
-import dev.fikril.androidcorekit.core.network.telemetry.NoOpNetworkTelemetryObserver
 import dev.fikril.androidcorekit.core.session.SessionManager
+import dev.fikril.androidcorekit.network.LoggingNetworkTelemetryObserver
 import dev.fikril.androidcorekit.network.NetworkSecurityPolicyFactory
 import dev.fikril.androidcorekit.session.AndroidKeystoreSessionCrypto
 import dev.fikril.androidcorekit.session.BackendAccessTokenRefresher
@@ -91,7 +91,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideNetworkTelemetryObserver(): NetworkTelemetryObserver = NoOpNetworkTelemetryObserver
+    fun provideNetworkTelemetryObserver(observer: LoggingNetworkTelemetryObserver): NetworkTelemetryObserver = observer
 
     @Provides
     @Singleton

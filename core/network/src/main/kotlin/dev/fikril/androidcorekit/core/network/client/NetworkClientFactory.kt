@@ -51,6 +51,7 @@ class NetworkClientFactory(
                 RefreshTokenAuthenticator(
                     accessTokenProvider = accessTokenProvider,
                     accessTokenRefresher = accessTokenRefresher,
+                    telemetryObserver = telemetryObserver,
                 ),
             ).build()
 

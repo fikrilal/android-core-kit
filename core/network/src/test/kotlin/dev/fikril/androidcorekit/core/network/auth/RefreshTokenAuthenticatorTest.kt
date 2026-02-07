@@ -1,6 +1,9 @@
 package dev.fikril.androidcorekit.core.network.auth
 
 import dev.fikril.androidcorekit.core.network.model.NetworkHeaders
+import dev.fikril.androidcorekit.core.network.telemetry.NetworkRefreshOutcome
+import dev.fikril.androidcorekit.core.network.telemetry.NetworkTelemetryEvent
+import dev.fikril.androidcorekit.core.network.telemetry.NetworkTelemetryEventType
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -9,11 +12,15 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
+
+private typealias TelemetryEvents = CopyOnWriteArrayList<NetworkTelemetryEvent>
 
 class RefreshTokenAuthenticatorTest {
     @Test
@@ -29,6 +36,7 @@ class RefreshTokenAuthenticatorTest {
     fun `retries get request with refreshed token`() {
         var token = "old-token"
         var refreshCalls = 0
+        val events = TelemetryEvents()
         val authenticator =
             RefreshTokenAuthenticator(
                 accessTokenProvider = AccessTokenProvider { token },
@@ -38,22 +46,33 @@ class RefreshTokenAuthenticatorTest {
                         token = "new-token"
                         true
                     },
+                telemetryObserver = { event -> events.add(event) },
             )
 
         val updated =
             authenticator.authenticate(
                 route = null,
-                response = unauthorizedResponse(authorization = "Bearer old-token"),
+                response =
+                    unauthorizedResponse(
+                        authorization = "Bearer old-token",
+                        requestId = "req-auth-1",
+                    ),
             )
 
         assertNotNull(updated)
         assertEquals(1, refreshCalls)
         assertEquals("Bearer new-token", updated?.header(NetworkHeaders.AUTHORIZATION))
+        assertEquals(2, events.size)
+        assertEquals(NetworkTelemetryEventType.REFRESH_ATTEMPT, events[0].eventType)
+        assertEquals(NetworkTelemetryEventType.REFRESH_RESULT, events[1].eventType)
+        assertEquals(NetworkRefreshOutcome.SUCCESS, events[1].refreshOutcome)
+        assertEquals("req-auth-1", events[1].requestId)
     }
 
     @Test
     fun `does not retry post without idempotency key`() {
         var refreshCalls = 0
+        val events = TelemetryEvents()
         val authenticator =
             RefreshTokenAuthenticator(
                 accessTokenProvider = AccessTokenProvider { "old-token" },
@@ -62,6 +81,7 @@ class RefreshTokenAuthenticatorTest {
                         refreshCalls += 1
                         true
                     },
+                telemetryObserver = { event -> events.add(event) },
             )
 
         val updated =
@@ -76,6 +96,9 @@ class RefreshTokenAuthenticatorTest {
 
         assertNull(updated)
         assertEquals(0, refreshCalls)
+        assertEquals(1, events.size)
+        assertEquals(NetworkTelemetryEventType.REFRESH_RESULT, events[0].eventType)
+        assertEquals(NetworkRefreshOutcome.SKIPPED, events[0].refreshOutcome)
     }
 
     @Test
@@ -107,6 +130,34 @@ class RefreshTokenAuthenticatorTest {
         assertNotNull(updated)
         assertEquals(1, refreshCalls)
         assertEquals("Bearer new-token", updated?.header(NetworkHeaders.AUTHORIZATION))
+    }
+
+    @Test
+    fun `emits redacted telemetry message when refresh throws`() {
+        val events = TelemetryEvents()
+        val authenticator =
+            RefreshTokenAuthenticator(
+                accessTokenProvider = AccessTokenProvider { "old-token" },
+                accessTokenRefresher =
+                    AccessTokenRefresher {
+                        error("accessToken=plain-secret for john.doe@example.com")
+                    },
+                telemetryObserver = { event -> events.add(event) },
+            )
+
+        val updated =
+            authenticator.authenticate(
+                route = null,
+                response = unauthorizedResponse(authorization = "Bearer old-token"),
+            )
+
+        assertNull(updated)
+        assertEquals(2, events.size)
+        assertEquals(NetworkTelemetryEventType.REFRESH_RESULT, events[1].eventType)
+        assertEquals(NetworkRefreshOutcome.FAILURE, events[1].refreshOutcome)
+        assertEquals("REFRESH_EXCEPTION", events[1].errorCode)
+        assertTrue((events[1].errorMessage ?: "").contains("[REDACTED]"))
+        assertTrue((events[1].errorMessage ?: "").contains("[REDACTED_EMAIL]"))
     }
 
     @Test
@@ -148,6 +199,7 @@ class RefreshTokenAuthenticatorTest {
         method: String = "GET",
         authorization: String? = null,
         idempotencyKey: String? = null,
+        requestId: String? = null,
     ): Response {
         val requestBuilder =
             Request
@@ -160,6 +212,9 @@ class RefreshTokenAuthenticatorTest {
         }
         if (!idempotencyKey.isNullOrBlank()) {
             requestBuilder.header(NetworkHeaders.IDEMPOTENCY_KEY, idempotencyKey)
+        }
+        if (!requestId.isNullOrBlank()) {
+            requestBuilder.header(NetworkHeaders.REQUEST_ID, requestId)
         }
 
         return Response

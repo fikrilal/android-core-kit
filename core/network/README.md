@@ -12,7 +12,7 @@ Features should own endpoint interfaces and DTOs, while this module owns transpo
 - `interceptor/`: request id and auth header interceptors.
 - `model/`: shared response/headers/host models.
 - `serialization/`: JSON parser helpers and default `kotlinx.serialization` config.
-- `telemetry/`: request outcome observer contracts (`NetworkTelemetryObserver`).
+- `telemetry/`: structured telemetry events + sanitization (`NetworkTelemetryObserver`, `NetworkTelemetrySanitizer`).
 
 ## Current Request Flow
 1. Feature builds Retrofit API from `RetrofitServiceFactory`.
@@ -22,12 +22,14 @@ Features should own endpoint interfaces and DTOs, while this module owns transpo
 5. `NetworkCallExecutor` maps response envelopes and failures into `ApiResponse<T>`.
 6. Optional `throwOnError=true` converts error responses to `ApiException`.
 7. UI/domain layers consume typed `AppError` via `toAppError()` instead of branching on raw HTTP codes.
+8. Retry/refresh telemetry emits correlated events keyed by `X-Request-Id` with redaction-by-default.
 
 ## Usage Rules
 - Do not add feature-specific DTOs/endpoints in `core/network`; keep them in `feature/*/data/remote`.
 - For write retries, include `Idempotency-Key` header.
 - Keep parser logic deterministic and side-effect free.
 - Preserve request correlation via `X-Request-Id`.
+- Telemetry must never include bearer tokens, refresh payloads, or email/PII.
 - Do not rely on OkHttp implicit retries; retries are explicitly controlled via `RetryPolicyInterceptor`.
 - `prod` transport must use strict certificate pinning with primary + backup pins (rotation-ready).
 - `dev` transport may stay relaxed for local/backend-core-kit workflows.

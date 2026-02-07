@@ -4,7 +4,9 @@ import dev.fikril.androidcorekit.core.network.client.NetworkRetryPolicy
 import dev.fikril.androidcorekit.core.network.model.NetworkHeaders
 import dev.fikril.androidcorekit.core.network.telemetry.NetworkOutcome
 import dev.fikril.androidcorekit.core.network.telemetry.NetworkTelemetryEvent
+import dev.fikril.androidcorekit.core.network.telemetry.NetworkTelemetryEventType
 import dev.fikril.androidcorekit.core.network.telemetry.NetworkTelemetryObserver
+import dev.fikril.androidcorekit.core.network.telemetry.NetworkTelemetrySanitizer
 import dev.fikril.androidcorekit.core.network.telemetry.NoOpNetworkTelemetryObserver
 import okhttp3.Interceptor
 import okhttp3.Request
@@ -36,29 +38,59 @@ class RetryPolicyInterceptor(
                 val response = chain.proceed(request)
                 if (!shouldRetryHttp(request = request, statusCode = response.code, attempt = attempt)) {
                     emitEvent(
+                        eventType = NetworkTelemetryEventType.REQUEST_COMPLETE,
                         request = request,
                         requestId = requestId,
+                        traceId = response.header(NetworkHeaders.REQUEST_ID),
                         outcome = if (response.isSuccessful) NetworkOutcome.SUCCESS else NetworkOutcome.HTTP_ERROR,
                         statusCode = response.code,
                         attempts = attempt,
                         startNanos = startNanos,
+                        errorCode = if (response.isSuccessful) null else "HTTP_${response.code}",
                     )
                     return response
                 }
+                emitEvent(
+                    eventType = NetworkTelemetryEventType.RETRY_ATTEMPT,
+                    request = request,
+                    requestId = requestId,
+                    traceId = response.header(NetworkHeaders.REQUEST_ID),
+                    outcome = NetworkOutcome.HTTP_ERROR,
+                    statusCode = response.code,
+                    attempts = attempt,
+                    startNanos = startNanos,
+                    errorCode = "RETRYABLE_HTTP_${response.code}",
+                    errorMessage = "Retrying request after HTTP ${response.code}.",
+                )
                 response.close()
             } catch (exception: IOException) {
                 if (!shouldRetryTransport(request = request, attempt = attempt)) {
                     emitEvent(
+                        eventType = NetworkTelemetryEventType.REQUEST_COMPLETE,
                         request = request,
                         requestId = requestId,
+                        traceId = null,
                         outcome = NetworkOutcome.NETWORK_ERROR,
                         statusCode = null,
                         attempts = attempt,
                         startNanos = startNanos,
+                        errorCode = NETWORK_IO_FAILURE_CODE,
                         errorMessage = exception.message,
                     )
                     throw exception
                 }
+                emitEvent(
+                    eventType = NetworkTelemetryEventType.RETRY_ATTEMPT,
+                    request = request,
+                    requestId = requestId,
+                    traceId = null,
+                    outcome = NetworkOutcome.NETWORK_ERROR,
+                    statusCode = null,
+                    attempts = attempt,
+                    startNanos = startNanos,
+                    errorCode = NETWORK_IO_RETRY_CODE,
+                    errorMessage = exception.message,
+                )
                 lastFailure = exception
             }
 
@@ -68,12 +100,15 @@ class RetryPolicyInterceptor(
         }
 
         emitEvent(
+            eventType = NetworkTelemetryEventType.REQUEST_COMPLETE,
             request = request,
             requestId = requestId,
+            traceId = null,
             outcome = NetworkOutcome.NETWORK_ERROR,
             statusCode = null,
             attempts = attempt,
             startNanos = startNanos,
+            errorCode = RETRY_EXHAUSTED_CODE,
             errorMessage = lastFailure?.message ?: "Retry exhausted.",
         )
         throw lastFailure ?: IOException("Retry exhausted without response.")
@@ -107,26 +142,32 @@ class RetryPolicyInterceptor(
     }
 
     private fun emitEvent(
+        eventType: NetworkTelemetryEventType,
         request: Request,
         requestId: String?,
+        traceId: String?,
         outcome: NetworkOutcome,
         statusCode: Int?,
         attempts: Int,
         startNanos: Long,
+        errorCode: String? = null,
         errorMessage: String? = null,
     ) {
         val elapsedNanos = nanoTimeProvider() - startNanos
         val durationMillis = TimeUnit.NANOSECONDS.toMillis(elapsedNanos.coerceAtLeast(0L))
-        telemetryObserver.onRequestComplete(
+        telemetryObserver.onEvent(
             NetworkTelemetryEvent(
+                eventType = eventType,
                 method = request.method,
-                url = request.url.toString(),
+                route = NetworkTelemetrySanitizer.sanitizeRoute(request.url.toString()),
                 requestId = requestId,
+                traceId = traceId,
                 outcome = outcome,
                 statusCode = statusCode,
                 attemptCount = attempts,
                 durationMillis = durationMillis,
-                errorMessage = errorMessage,
+                errorCode = errorCode,
+                errorMessage = NetworkTelemetrySanitizer.sanitizeText(errorMessage),
             ),
         )
     }
@@ -135,5 +176,8 @@ class RetryPolicyInterceptor(
         private val SAFE_METHODS = setOf("GET", "HEAD", "OPTIONS")
         private val WRITE_METHODS = setOf("POST", "PUT", "PATCH", "DELETE")
         private const val MAX_BACKOFF_SHIFT = 20
+        private const val NETWORK_IO_RETRY_CODE = "RETRYABLE_NETWORK_IO"
+        private const val NETWORK_IO_FAILURE_CODE = "NETWORK_IO_FAILURE"
+        private const val RETRY_EXHAUSTED_CODE = "RETRY_EXHAUSTED"
     }
 }

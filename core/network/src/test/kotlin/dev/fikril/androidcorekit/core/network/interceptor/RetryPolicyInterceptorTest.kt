@@ -4,6 +4,7 @@ import dev.fikril.androidcorekit.core.network.client.NetworkRetryPolicy
 import dev.fikril.androidcorekit.core.network.model.NetworkHeaders
 import dev.fikril.androidcorekit.core.network.telemetry.NetworkOutcome
 import dev.fikril.androidcorekit.core.network.telemetry.NetworkTelemetryEvent
+import dev.fikril.androidcorekit.core.network.telemetry.NetworkTelemetryEventType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -55,9 +56,11 @@ class RetryPolicyInterceptorTest {
             assertEquals(200, it.code)
         }
         assertEquals(2, server.requestCount)
-        assertEquals(1, events.size)
-        assertEquals(NetworkOutcome.SUCCESS, events.first().outcome)
-        assertEquals(2, events.first().attemptCount)
+        assertEquals(2, events.size)
+        assertEquals(NetworkTelemetryEventType.RETRY_ATTEMPT, events[0].eventType)
+        assertEquals(NetworkTelemetryEventType.REQUEST_COMPLETE, events[1].eventType)
+        assertEquals(NetworkOutcome.SUCCESS, events[1].outcome)
+        assertEquals(2, events[1].attemptCount)
     }
 
     @Test
@@ -171,10 +174,46 @@ class RetryPolicyInterceptorTest {
         }
 
         assertEquals(2, attempts.get())
-        assertEquals(1, events.size)
-        assertEquals(NetworkOutcome.NETWORK_ERROR, events.first().outcome)
-        assertEquals(2, events.first().attemptCount)
-        assertTrue(events.first().durationMillis >= 0)
+        assertEquals(2, events.size)
+        assertEquals(NetworkTelemetryEventType.RETRY_ATTEMPT, events[0].eventType)
+        assertEquals(NetworkTelemetryEventType.REQUEST_COMPLETE, events[1].eventType)
+        assertEquals(NetworkOutcome.NETWORK_ERROR, events[1].outcome)
+        assertEquals(2, events[1].attemptCount)
+        assertTrue((events[1].durationMillis ?: 0L) >= 0)
+    }
+
+    @Test
+    fun `sanitizes telemetry route and error message`() {
+        val events = TelemetryEvents()
+        val client =
+            OkHttpClient
+                .Builder()
+                .addInterceptor(
+                    RetryPolicyInterceptor(
+                        policy = noDelayRetryPolicy(maxAttempts = 1),
+                        telemetryObserver = { event -> events.add(event) },
+                        sleeper = {},
+                    ),
+                ).addInterceptor {
+                    throw IOException("Bearer eyJhbGciOiJIUzI1NiJ9.abcd.efgh for user john.doe@example.com")
+                }.build()
+
+        runCatching {
+            client
+                .newCall(
+                    Request
+                        .Builder()
+                        .url(server.url("/v1/me?email=john.doe@example.com"))
+                        .build(),
+                ).execute()
+        }
+
+        val telemetry = events.single()
+        assertEquals(NetworkTelemetryEventType.REQUEST_COMPLETE, telemetry.eventType)
+        assertTrue(telemetry.route.contains(":${server.port}/v1/me"))
+        assertTrue(!telemetry.route.contains("?"))
+        assertTrue((telemetry.errorMessage ?: "").contains("[REDACTED]"))
+        assertTrue((telemetry.errorMessage ?: "").contains("[REDACTED_EMAIL]"))
     }
 
     private fun createClient(events: TelemetryEvents = TelemetryEvents()): OkHttpClient =

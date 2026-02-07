@@ -27,6 +27,7 @@ android {
 dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:designsystem"))
+    implementation(project(":core:network"))
     implementation(project(":core:navigation"))
     implementation(project(":core:session"))
     implementation(project(":feature:auth"))

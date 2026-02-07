@@ -8,6 +8,9 @@ import dagger.hilt.components.SingletonComponent
 import dev.fikril.androidcorekit.BuildConfig
 import dev.fikril.androidcorekit.config.ApiConfig
 import dev.fikril.androidcorekit.core.common.AppDispatchers
+import dev.fikril.androidcorekit.core.network.ApiBaseUrlProvider
+import dev.fikril.androidcorekit.core.network.ApiHelper
+import dev.fikril.androidcorekit.core.network.StaticApiBaseUrlProvider
 import dev.fikril.androidcorekit.core.session.SessionManager
 import dev.fikril.androidcorekit.session.InMemorySessionManager
 import kotlinx.coroutines.CoroutineDispatcher
@@ -35,6 +38,24 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAppDispatchers(): AppDispatchers = DefaultAppDispatchers
+
+    @Provides
+    @Singleton
+    fun provideApiBaseUrlProvider(apiConfig: ApiConfig): ApiBaseUrlProvider =
+        StaticApiBaseUrlProvider(
+            baseUrl = apiConfig.baseUrl,
+        )
+
+    @Provides
+    @Singleton
+    fun provideApiHelper(
+        apiBaseUrlProvider: ApiBaseUrlProvider,
+        appDispatchers: AppDispatchers,
+    ): ApiHelper =
+        ApiHelper.create(
+            baseUrlProvider = apiBaseUrlProvider,
+            dispatchers = appDispatchers,
+        )
 }
 
 private object DefaultAppDispatchers : AppDispatchers {

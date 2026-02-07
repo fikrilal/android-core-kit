@@ -23,6 +23,7 @@ dependencyResolutionManagement {
 rootProject.name = "AndroidCoreKit"
 include(":app")
 include(":core:common")
+include(":core:network")
 include(":core:ui")
 include(":core:designsystem")
 include(":core:navigation")

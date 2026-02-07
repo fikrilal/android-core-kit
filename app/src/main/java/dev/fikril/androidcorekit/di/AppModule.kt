@@ -20,6 +20,7 @@ import dev.fikril.androidcorekit.core.network.execution.NetworkCallExecutor
 import dev.fikril.androidcorekit.core.network.telemetry.NetworkTelemetryObserver
 import dev.fikril.androidcorekit.core.network.telemetry.NoOpNetworkTelemetryObserver
 import dev.fikril.androidcorekit.core.session.SessionManager
+import dev.fikril.androidcorekit.network.NetworkSecurityPolicyFactory
 import dev.fikril.androidcorekit.session.AndroidKeystoreSessionCrypto
 import dev.fikril.androidcorekit.session.BackendAccessTokenRefresher
 import dev.fikril.androidcorekit.session.DataStoreEncryptedSessionStore
@@ -70,7 +71,19 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideNetworkClientConfig(): NetworkClientConfig = NetworkClientConfig()
+    fun provideNetworkClientConfig(
+        apiConfig: ApiConfig,
+        networkSecurityPolicyFactory: NetworkSecurityPolicyFactory,
+    ): NetworkClientConfig =
+        NetworkClientConfig(
+            securityConfig =
+                networkSecurityPolicyFactory.create(
+                    baseUrl = apiConfig.baseUrl,
+                    isProd = BuildConfig.FLAVOR == "prod",
+                    primaryPin = BuildConfig.CERT_PIN_PRIMARY,
+                    backupPin = BuildConfig.CERT_PIN_BACKUP,
+                ),
+        )
 
     @Provides
     @Singleton

@@ -28,6 +28,8 @@ Features should own endpoint interfaces and DTOs, while this module owns transpo
 - Keep parser logic deterministic and side-effect free.
 - Preserve request correlation via `X-Request-Id`.
 - Do not rely on OkHttp implicit retries; retries are explicitly controlled via `RetryPolicyInterceptor`.
+- `prod` transport must use strict certificate pinning with primary + backup pins (rotation-ready).
+- `dev` transport may stay relaxed for local/backend-core-kit workflows.
 
 ## Minimal Usage Example
 ```kotlin

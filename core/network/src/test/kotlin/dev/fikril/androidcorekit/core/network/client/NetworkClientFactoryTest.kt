@@ -1,7 +1,9 @@
 package dev.fikril.androidcorekit.core.network.client
 
+import okhttp3.ConnectionSpec
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NetworkClientFactoryTest {
@@ -24,5 +26,30 @@ class NetworkClientFactoryTest {
         assertEquals(33_000, client.writeTimeoutMillis)
         assertEquals(44_000, client.callTimeoutMillis)
         assertFalse(client.retryOnConnectionFailure)
+    }
+
+    @Test
+    fun `applies modern tls connection specs when enabled`() {
+        val config =
+            NetworkClientConfig(
+                securityConfig =
+                    NetworkSecurityConfig(
+                        pinningMode = NetworkPinningMode.ENFORCED,
+                        pinnedCertificatesByHost =
+                            mapOf(
+                                "api.example.com" to
+                                    setOf(
+                                        "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+                                        "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
+                                    ),
+                            ),
+                        enforceModernTls = true,
+                    ),
+            )
+
+        val client = NetworkClientFactory(clientConfig = config).create()
+
+        assertTrue(client.connectionSpecs.contains(ConnectionSpec.MODERN_TLS))
+        assertFalse(client.connectionSpecs.contains(ConnectionSpec.CLEARTEXT))
     }
 }

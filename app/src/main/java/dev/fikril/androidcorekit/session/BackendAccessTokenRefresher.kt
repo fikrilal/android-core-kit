@@ -4,6 +4,7 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import dev.fikril.androidcorekit.core.network.auth.AccessTokenRefresher
 import dev.fikril.androidcorekit.core.network.client.ApiBaseUrlProvider
 import dev.fikril.androidcorekit.core.network.client.NetworkClientConfig
+import dev.fikril.androidcorekit.core.network.client.applyNetworkSecurityConfig
 import dev.fikril.androidcorekit.core.network.execution.NetworkCallExecutor
 import dev.fikril.androidcorekit.core.network.interceptor.RequestIdInterceptor
 import dev.fikril.androidcorekit.core.network.model.ApiHost
@@ -57,6 +58,7 @@ class BackendAccessTokenRefresher
                     .readTimeout(clientConfig.readTimeoutMillis, TimeUnit.MILLISECONDS)
                     .writeTimeout(clientConfig.writeTimeoutMillis, TimeUnit.MILLISECONDS)
                     .callTimeout(clientConfig.callTimeoutMillis, TimeUnit.MILLISECONDS)
+                    .applyNetworkSecurityConfig(clientConfig.securityConfig)
                     .addInterceptor(RequestIdInterceptor())
                     .build()
 

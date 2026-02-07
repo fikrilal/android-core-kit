@@ -28,11 +28,23 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                         dimension = envDimension
                         applicationIdSuffix = ".dev"
                         buildConfigField("String", "BASE_URL", "\"https://dev.example.invalid\"")
+                        buildConfigField("String", "CERT_PIN_PRIMARY", "\"\"")
+                        buildConfigField("String", "CERT_PIN_BACKUP", "\"\"")
                     }
 
                     maybeCreate("prod").apply {
                         dimension = envDimension
                         buildConfigField("String", "BASE_URL", "\"https://prod.example.invalid\"")
+                        buildConfigField(
+                            "String",
+                            "CERT_PIN_PRIMARY",
+                            "\"sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\"",
+                        )
+                        buildConfigField(
+                            "String",
+                            "CERT_PIN_BACKUP",
+                            "\"sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=\"",
+                        )
                     }
                 }
             }

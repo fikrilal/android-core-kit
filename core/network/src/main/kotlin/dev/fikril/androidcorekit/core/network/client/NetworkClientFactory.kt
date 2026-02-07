@@ -38,6 +38,7 @@ class NetworkClientFactory(
             .readTimeout(clientConfig.readTimeoutMillis, TimeUnit.MILLISECONDS)
             .writeTimeout(clientConfig.writeTimeoutMillis, TimeUnit.MILLISECONDS)
             .callTimeout(clientConfig.callTimeoutMillis, TimeUnit.MILLISECONDS)
+            .applyNetworkSecurityConfig(clientConfig.securityConfig)
             .addInterceptor(RequestIdInterceptor())
             .addInterceptor(AuthorizationHeaderInterceptor(accessTokenProvider))
             .addInterceptor(

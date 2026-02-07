@@ -7,6 +7,7 @@ data class NetworkClientConfig(
     val callTimeoutMillis: Long = 60_000L,
     val maxIdleConnections: Int = 5,
     val keepAliveDurationMinutes: Long = 5,
+    val securityConfig: NetworkSecurityConfig = NetworkSecurityConfig(),
 )
 
 data class NetworkRetryPolicy(

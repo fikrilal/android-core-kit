@@ -17,6 +17,9 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 class ApiHelper(
     private val client: OkHttpClient,
@@ -160,7 +163,7 @@ class ApiHelper(
                 requiresAuth = requiresAuth,
             )
 
-        var response = executeRequest(request = initialRequest, parser = parser)
+        var response = executeSafely(request = initialRequest, parser = parser)
         val canRetry =
             shouldAttemptRefreshRetry(
                 method = method,
@@ -178,7 +181,7 @@ class ApiHelper(
                     headers = headers,
                     requiresAuth = requiresAuth,
                 )
-            response = executeRequest(request = retryRequest, parser = parser)
+            response = executeSafely(request = retryRequest, parser = parser)
         }
 
         if (response.isError && throwOnError) {
@@ -267,6 +270,16 @@ class ApiHelper(
                     )
                 }
             }
+        }
+
+    private suspend fun <T> executeSafely(
+        request: Request,
+        parser: JsonParser<T>,
+    ): ApiResponse<T> =
+        runCatching {
+            executeRequest(request = request, parser = parser)
+        }.getOrElse { throwable ->
+            mapTransportFailure(throwable)
         }
 
     private fun <T> parseSuccess(
@@ -403,6 +416,42 @@ class ApiHelper(
 
     private fun Response.requestId(): String? = header("x-request-id") ?: header("X-Request-Id")
 
+    private fun <T> mapTransportFailure(throwable: Throwable): ApiResponse<T> {
+        val localError =
+            when (throwable) {
+                is SocketTimeoutException ->
+                    LocalError(
+                        statusCode = LOCAL_STATUS_TIMEOUT,
+                        code = LOCAL_CODE_TIMEOUT,
+                        message = "Request timed out.",
+                    )
+                is UnknownHostException ->
+                    LocalError(
+                        statusCode = LOCAL_STATUS_NO_INTERNET,
+                        code = LOCAL_CODE_NO_INTERNET,
+                        message = "No internet connection.",
+                    )
+                is IOException ->
+                    LocalError(
+                        statusCode = LOCAL_STATUS_NETWORK_FAILURE,
+                        code = LOCAL_CODE_NETWORK_FAILURE,
+                        message = "Network request failed.",
+                    )
+                else ->
+                    LocalError(
+                        statusCode = LOCAL_STATUS_UNEXPECTED_FAILURE,
+                        code = LOCAL_CODE_UNEXPECTED_FAILURE,
+                        message = "Unexpected network failure.",
+                    )
+            }
+
+        return ApiResponse.error(
+            message = localError.message,
+            statusCode = localError.statusCode,
+            code = localError.code,
+        )
+    }
+
     private fun JsonObject?.string(key: String): String? =
         this
             ?.get(key)
@@ -433,6 +482,12 @@ class ApiHelper(
         val traceId: String? = null,
     )
 
+    private data class LocalError(
+        val statusCode: Int,
+        val code: String,
+        val message: String,
+    )
+
     companion object {
         fun create(
             baseUrlProvider: ApiBaseUrlProvider,
@@ -450,6 +505,14 @@ class ApiHelper(
 
         private const val HTTP_UNAUTHORIZED = 401
         private const val IDEMPOTENCY_KEY_HEADER = "Idempotency-Key"
+        private const val LOCAL_STATUS_NO_INTERNET = -1
+        private const val LOCAL_STATUS_TIMEOUT = -2
+        private const val LOCAL_STATUS_NETWORK_FAILURE = -3
+        private const val LOCAL_STATUS_UNEXPECTED_FAILURE = -4
+        private const val LOCAL_CODE_NO_INTERNET = "NETWORK_UNAVAILABLE"
+        private const val LOCAL_CODE_TIMEOUT = "REQUEST_TIMEOUT"
+        private const val LOCAL_CODE_NETWORK_FAILURE = "NETWORK_ERROR"
+        private const val LOCAL_CODE_UNEXPECTED_FAILURE = "UNEXPECTED_NETWORK_ERROR"
         private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
         private val SAFE_RETRY_METHODS = setOf("GET", "HEAD", "OPTIONS")
         private val WRITE_RETRY_METHODS = setOf("POST", "PUT", "PATCH", "DELETE")

@@ -15,6 +15,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ApiHelperTest {
@@ -267,12 +269,62 @@ class ApiHelperTest {
             assertEquals("Bearer new-token", server.takeRequest().getHeader("Authorization"))
         }
 
+    @Test
+    fun `get returns offline error response when transport fails and throwOnError is false`() =
+        runTest {
+            val client =
+                OkHttpClient
+                    .Builder()
+                    .addInterceptor { throw UnknownHostException("offline") }
+                    .build()
+
+            val helper = createHelper(client = client)
+
+            val response =
+                helper.get(
+                    path = "/v1/me",
+                    parser = noDataParser,
+                    throwOnError = false,
+                )
+
+            assertTrue(response.isError)
+            assertEquals(-1, response.statusCode)
+            assertEquals("NETWORK_UNAVAILABLE", response.code)
+            assertEquals("No internet connection.", response.message)
+        }
+
+    @Test
+    fun `get throws mapped ApiException when transport timeout happens and throwOnError is true`() =
+        runTest {
+            val client =
+                OkHttpClient
+                    .Builder()
+                    .addInterceptor { throw SocketTimeoutException("timeout") }
+                    .build()
+
+            val helper = createHelper(client = client)
+
+            try {
+                helper.get(
+                    path = "/v1/me",
+                    parser = noDataParser,
+                    throwOnError = true,
+                )
+                fail("Expected ApiException")
+            } catch (exception: ApiException) {
+                assertEquals(-2, exception.statusCode)
+                assertEquals("REQUEST_TIMEOUT", exception.code)
+                assertEquals("Request timed out.", exception.message)
+            }
+        }
+
     private fun createHelper(
+        client: OkHttpClient = OkHttpClient(),
         accessTokenProvider: AccessTokenProvider = AccessTokenProvider { null },
         accessTokenRefresher: AccessTokenRefresher? = null,
     ): ApiHelper =
         ApiHelper(
-            client = OkHttpClient(),
+            client = client,
             baseUrlProvider =
                 ApiBaseUrlProvider {
                     server.url("/").toString()

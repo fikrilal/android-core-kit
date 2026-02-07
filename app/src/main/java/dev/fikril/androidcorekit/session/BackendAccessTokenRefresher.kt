@@ -1,10 +1,12 @@
 package dev.fikril.androidcorekit.session
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import dev.fikril.androidcorekit.core.common.AppError
 import dev.fikril.androidcorekit.core.network.auth.AccessTokenRefresher
 import dev.fikril.androidcorekit.core.network.client.ApiBaseUrlProvider
 import dev.fikril.androidcorekit.core.network.client.NetworkClientConfig
 import dev.fikril.androidcorekit.core.network.client.applyNetworkSecurityConfig
+import dev.fikril.androidcorekit.core.network.error.toAppError
 import dev.fikril.androidcorekit.core.network.execution.NetworkCallExecutor
 import dev.fikril.androidcorekit.core.network.interceptor.RequestIdInterceptor
 import dev.fikril.androidcorekit.core.network.model.ApiHost
@@ -104,8 +106,9 @@ class BackendAccessTokenRefresher
         }
 
         private suspend fun handleRefreshError(response: ApiResponse<SessionTokens>) {
-            if (response.statusCode == 401 || response.statusCode == 403) {
-                sessionManager.logout()
+            when (response.toAppError()) {
+                AppError.Unauthorized -> sessionManager.logout()
+                else -> Unit
             }
         }
 

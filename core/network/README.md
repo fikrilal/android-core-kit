@@ -7,7 +7,7 @@ Features should own endpoint interfaces and DTOs, while this module owns transpo
 ## Package Layout
 - `auth/`: token contracts and `RefreshTokenAuthenticator`.
 - `client/`: base URL provider, `OkHttpClient` factory, Retrofit factory.
-- `error/`: `ApiException` and local network error codes/statuses.
+- `error/`: `ApiException`, `ApiResponse`/`Throwable` -> `AppError` mappers, and local network error codes/statuses.
 - `execution/`: `NetworkCallExecutor` for envelope/error parsing + transport mapping.
 - `interceptor/`: request id and auth header interceptors.
 - `model/`: shared response/headers/host models.
@@ -21,6 +21,7 @@ Features should own endpoint interfaces and DTOs, while this module owns transpo
 4. Unauthorized responses may trigger `RefreshTokenAuthenticator` retry (idempotency-safe policy).
 5. `NetworkCallExecutor` maps response envelopes and failures into `ApiResponse<T>`.
 6. Optional `throwOnError=true` converts error responses to `ApiException`.
+7. UI/domain layers consume typed `AppError` via `toAppError()` instead of branching on raw HTTP codes.
 
 ## Usage Rules
 - Do not add feature-specific DTOs/endpoints in `core/network`; keep them in `feature/*/data/remote`.
@@ -39,6 +40,10 @@ val response = networkCallExecutor.execute(
     parser = AuthResponseModel.fromJson,
     throwOnError = false,
 )
+if (response.isError) {
+    val appError = response.toAppError()
+    // Handle typed error (Unauthorized / Validation / Network / Server / ...)
+}
 ```
 
 ## Next Milestone

@@ -118,6 +118,37 @@ class BackendAccessTokenRefresherTest {
             assertEquals(null, sessionManager.accessToken())
             assertEquals(null, sessionManager.refreshToken())
         }
+
+    @Test
+    fun `refresh clears session on forbidden response`() =
+        runTest {
+            sessionManager.setTokens(
+                SessionTokens(
+                    accessToken = "access-old",
+                    refreshToken = "refresh-old",
+                ),
+            )
+            server.enqueue(
+                MockResponse()
+                    .setResponseCode(403)
+                    .setBody(
+                        """
+                        {
+                          "title": "Forbidden",
+                          "status": 403,
+                          "code": "AUTH_REFRESH_TOKEN_FORBIDDEN"
+                        }
+                        """.trimIndent(),
+                    ),
+            )
+
+            val refreshed = refresher.refreshAccessToken()
+
+            assertFalse(refreshed)
+            assertEquals(SessionState.Unauthenticated, sessionManager.state.value)
+            assertEquals(null, sessionManager.accessToken())
+            assertEquals(null, sessionManager.refreshToken())
+        }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

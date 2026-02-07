@@ -1,4 +1,4 @@
-package dev.fikril.androidcorekit.core.network
+package dev.fikril.androidcorekit.core.network.model
 
 import kotlinx.serialization.json.JsonObject
 

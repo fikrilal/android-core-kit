@@ -1,4 +1,7 @@
-package dev.fikril.androidcorekit.core.network
+package dev.fikril.androidcorekit.core.network.error
+
+import dev.fikril.androidcorekit.core.network.model.ApiResponse
+import dev.fikril.androidcorekit.core.network.model.ApiValidationError
 
 class ApiException(
     val statusCode: Int?,

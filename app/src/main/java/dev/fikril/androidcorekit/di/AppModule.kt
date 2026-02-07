@@ -8,9 +8,15 @@ import dagger.hilt.components.SingletonComponent
 import dev.fikril.androidcorekit.BuildConfig
 import dev.fikril.androidcorekit.config.ApiConfig
 import dev.fikril.androidcorekit.core.common.AppDispatchers
-import dev.fikril.androidcorekit.core.network.ApiBaseUrlProvider
-import dev.fikril.androidcorekit.core.network.ApiHelper
-import dev.fikril.androidcorekit.core.network.StaticApiBaseUrlProvider
+import dev.fikril.androidcorekit.core.network.auth.AccessTokenProvider
+import dev.fikril.androidcorekit.core.network.auth.AccessTokenRefresher
+import dev.fikril.androidcorekit.core.network.auth.NoOpAccessTokenProvider
+import dev.fikril.androidcorekit.core.network.auth.NoOpAccessTokenRefresher
+import dev.fikril.androidcorekit.core.network.client.ApiBaseUrlProvider
+import dev.fikril.androidcorekit.core.network.client.NetworkClientFactory
+import dev.fikril.androidcorekit.core.network.client.RetrofitServiceFactory
+import dev.fikril.androidcorekit.core.network.client.StaticApiBaseUrlProvider
+import dev.fikril.androidcorekit.core.network.execution.NetworkCallExecutor
 import dev.fikril.androidcorekit.core.session.SessionManager
 import dev.fikril.androidcorekit.session.InMemorySessionManager
 import kotlinx.coroutines.CoroutineDispatcher
@@ -48,12 +54,39 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideApiHelper(
+    fun provideAccessTokenProvider(): AccessTokenProvider = NoOpAccessTokenProvider
+
+    @Provides
+    @Singleton
+    fun provideAccessTokenRefresher(): AccessTokenRefresher = NoOpAccessTokenRefresher
+
+    @Provides
+    @Singleton
+    fun provideNetworkClientFactory(
+        accessTokenProvider: AccessTokenProvider,
+        accessTokenRefresher: AccessTokenRefresher,
+    ): NetworkClientFactory =
+        NetworkClientFactory(
+            accessTokenProvider = accessTokenProvider,
+            accessTokenRefresher = accessTokenRefresher,
+            enableBasicLogging = BuildConfig.DEBUG,
+        )
+
+    @Provides
+    @Singleton
+    fun provideRetrofitServiceFactory(
         apiBaseUrlProvider: ApiBaseUrlProvider,
-        appDispatchers: AppDispatchers,
-    ): ApiHelper =
-        ApiHelper.create(
+        networkClientFactory: NetworkClientFactory,
+    ): RetrofitServiceFactory =
+        RetrofitServiceFactory(
             baseUrlProvider = apiBaseUrlProvider,
+            networkClientFactory = networkClientFactory,
+        )
+
+    @Provides
+    @Singleton
+    fun provideNetworkCallExecutor(appDispatchers: AppDispatchers): NetworkCallExecutor =
+        NetworkCallExecutor(
             dispatchers = appDispatchers,
         )
 }

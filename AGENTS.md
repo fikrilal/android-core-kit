@@ -14,6 +14,7 @@ app/
 core/
 ├─ common/                            # AppResult/AppError/AppDispatchers contracts
 ├─ designsystem/                      # Compose theme/tokens/components
+├─ network/                           # API helper, envelope/error mapping, retry policy
 ├─ navigation/                        # destination contracts + root destinations
 ├─ session/                           # SessionState/SessionManager contracts
 ├─ testing/                           # shared test dependencies/helpers
@@ -114,7 +115,7 @@ WSL Windows-wrapper fallback:
 - Start with:
   - `REPO_GOAL.md`
   - `docs/android-architecture-guide.md`
-  - `_WIP/end-to-end-backlog.md`
+  - `_WIP/2026-02-07_p0_foundation_auth_e2e_todo.md`
 - Backend contract source of truth:
   - `/mnt/c/Development/_CORE/backend-core-kit/docs/openapi/openapi.yaml`
   - `/mnt/c/Development/_CORE/backend-core-kit/docs/standards/`

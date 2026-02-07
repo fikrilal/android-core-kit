@@ -10,15 +10,23 @@ import dev.fikril.androidcorekit.config.ApiConfig
 import dev.fikril.androidcorekit.core.common.AppDispatchers
 import dev.fikril.androidcorekit.core.network.auth.AccessTokenProvider
 import dev.fikril.androidcorekit.core.network.auth.AccessTokenRefresher
-import dev.fikril.androidcorekit.core.network.auth.NoOpAccessTokenProvider
-import dev.fikril.androidcorekit.core.network.auth.NoOpAccessTokenRefresher
 import dev.fikril.androidcorekit.core.network.client.ApiBaseUrlProvider
+import dev.fikril.androidcorekit.core.network.client.NetworkClientConfig
 import dev.fikril.androidcorekit.core.network.client.NetworkClientFactory
+import dev.fikril.androidcorekit.core.network.client.NetworkRetryPolicy
 import dev.fikril.androidcorekit.core.network.client.RetrofitServiceFactory
 import dev.fikril.androidcorekit.core.network.client.StaticApiBaseUrlProvider
 import dev.fikril.androidcorekit.core.network.execution.NetworkCallExecutor
+import dev.fikril.androidcorekit.core.network.telemetry.NetworkTelemetryObserver
+import dev.fikril.androidcorekit.core.network.telemetry.NoOpNetworkTelemetryObserver
 import dev.fikril.androidcorekit.core.session.SessionManager
-import dev.fikril.androidcorekit.session.InMemorySessionManager
+import dev.fikril.androidcorekit.session.AndroidKeystoreSessionCrypto
+import dev.fikril.androidcorekit.session.BackendAccessTokenRefresher
+import dev.fikril.androidcorekit.session.DataStoreEncryptedSessionStore
+import dev.fikril.androidcorekit.session.PersistedSessionManager
+import dev.fikril.androidcorekit.session.SessionAccessTokenProvider
+import dev.fikril.androidcorekit.session.SessionCrypto
+import dev.fikril.androidcorekit.session.SessionStore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Singleton
@@ -28,7 +36,15 @@ import javax.inject.Singleton
 interface AppBindingsModule {
     @Binds
     @Singleton
-    fun bindSessionManager(impl: InMemorySessionManager): SessionManager
+    fun bindSessionManager(impl: PersistedSessionManager): SessionManager
+
+    @Binds
+    @Singleton
+    fun bindSessionStore(impl: DataStoreEncryptedSessionStore): SessionStore
+
+    @Binds
+    @Singleton
+    fun bindSessionCrypto(impl: AndroidKeystoreSessionCrypto): SessionCrypto
 }
 
 @Module
@@ -54,22 +70,40 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAccessTokenProvider(): AccessTokenProvider = NoOpAccessTokenProvider
+    fun provideNetworkClientConfig(): NetworkClientConfig = NetworkClientConfig()
 
     @Provides
     @Singleton
-    fun provideAccessTokenRefresher(): AccessTokenRefresher = NoOpAccessTokenRefresher
+    fun provideNetworkRetryPolicy(): NetworkRetryPolicy = NetworkRetryPolicy()
+
+    @Provides
+    @Singleton
+    fun provideNetworkTelemetryObserver(): NetworkTelemetryObserver = NoOpNetworkTelemetryObserver
+
+    @Provides
+    @Singleton
+    fun provideAccessTokenProvider(provider: SessionAccessTokenProvider) = provider
+
+    @Provides
+    @Singleton
+    fun provideAccessTokenRefresher(refresher: BackendAccessTokenRefresher) = refresher
 
     @Provides
     @Singleton
     fun provideNetworkClientFactory(
         accessTokenProvider: AccessTokenProvider,
         accessTokenRefresher: AccessTokenRefresher,
+        networkClientConfig: NetworkClientConfig,
+        networkRetryPolicy: NetworkRetryPolicy,
+        networkTelemetryObserver: NetworkTelemetryObserver,
     ): NetworkClientFactory =
         NetworkClientFactory(
             accessTokenProvider = accessTokenProvider,
             accessTokenRefresher = accessTokenRefresher,
             enableBasicLogging = BuildConfig.DEBUG,
+            clientConfig = networkClientConfig,
+            retryPolicy = networkRetryPolicy,
+            telemetryObserver = networkTelemetryObserver,
         )
 
     @Provides

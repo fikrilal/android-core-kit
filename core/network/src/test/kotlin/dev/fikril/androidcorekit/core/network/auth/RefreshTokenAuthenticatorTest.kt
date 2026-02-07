@@ -10,6 +10,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.concurrent.thread
 
 class RefreshTokenAuthenticatorTest {
     @Test
@@ -103,6 +107,41 @@ class RefreshTokenAuthenticatorTest {
         assertNotNull(updated)
         assertEquals(1, refreshCalls)
         assertEquals("Bearer new-token", updated?.header(NetworkHeaders.AUTHORIZATION))
+    }
+
+    @Test
+    fun `refresh calls are single flight for concurrent unauthorized requests`() {
+        var token = "old-token"
+        val refreshCalls = AtomicInteger(0)
+        val startLatch = CountDownLatch(1)
+        val doneLatch = CountDownLatch(4)
+        val authenticator =
+            RefreshTokenAuthenticator(
+                accessTokenProvider = AccessTokenProvider { token },
+                accessTokenRefresher =
+                    AccessTokenRefresher {
+                        startLatch.await(1, TimeUnit.SECONDS)
+                        Thread.sleep(20L)
+                        refreshCalls.incrementAndGet()
+                        token = "new-token"
+                        true
+                    },
+            )
+
+        repeat(4) {
+            thread {
+                authenticator.authenticate(
+                    route = null,
+                    response = unauthorizedResponse(authorization = "Bearer old-token"),
+                )
+                doneLatch.countDown()
+            }
+        }
+
+        startLatch.countDown()
+        doneLatch.await(2, TimeUnit.SECONDS)
+
+        assertEquals(1, refreshCalls.get())
     }
 
     private fun unauthorizedResponse(

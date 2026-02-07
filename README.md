@@ -20,6 +20,7 @@ These are **intentional constraints** for production readiness and consistency a
 
 Tracking docs:
 
+- Repository goal and scope: `REPO_GOAL.md`
 - End-to-end backlog: `_WIP/end-to-end-backlog.md`
 - Foundation proposal: `_WIP/foundation-engineering-proposal.md`
 - Foundation TODO: `_WIP/2026-02-01_foundation_implementation_todo.md`

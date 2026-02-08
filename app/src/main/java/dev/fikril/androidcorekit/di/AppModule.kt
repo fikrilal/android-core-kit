@@ -95,11 +95,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAccessTokenProvider(provider: SessionAccessTokenProvider) = provider
+    fun provideAccessTokenProvider(provider: SessionAccessTokenProvider): AccessTokenProvider = provider
 
     @Provides
     @Singleton
-    fun provideAccessTokenRefresher(refresher: BackendAccessTokenRefresher) = refresher
+    fun provideAccessTokenRefresher(refresher: BackendAccessTokenRefresher): AccessTokenRefresher = refresher
 
     @Provides
     @Singleton

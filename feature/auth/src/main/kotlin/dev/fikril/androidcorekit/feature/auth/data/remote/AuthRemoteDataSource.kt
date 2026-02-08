@@ -7,7 +7,6 @@ import dev.fikril.androidcorekit.core.network.model.ApiResponse
 import dev.fikril.androidcorekit.core.network.serialization.defaultNetworkJson
 import dev.fikril.androidcorekit.feature.auth.data.model.remote.LoginRequestDto
 import dev.fikril.androidcorekit.feature.auth.data.model.remote.LoginResponseDto
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,9 +21,9 @@ class DefaultAuthRemoteDataSource
     constructor(
         private val retrofitServiceFactory: RetrofitServiceFactory,
         private val networkCallExecutor: NetworkCallExecutor,
-        private val json: Json = defaultNetworkJson(),
     ) : AuthRemoteDataSource {
         private val authApi: AuthApi by lazy { retrofitServiceFactory.create<AuthApi>(ApiHost.AUTH) }
+        private val json = defaultNetworkJson()
 
         override suspend fun login(request: LoginRequestDto): ApiResponse<LoginResponseDto> =
             networkCallExecutor.execute(

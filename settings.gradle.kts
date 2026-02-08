@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             content {
@@ -21,4 +22,13 @@ dependencyResolutionManagement {
 
 rootProject.name = "AndroidCoreKit"
 include(":app")
- 
+include(":core:common")
+include(":core:network")
+include(":core:ui")
+include(":core:designsystem")
+include(":core:navigation")
+include(":core:session")
+include(":core:testing")
+include(":feature:auth")
+include(":feature:home")
+include(":feature:profile")

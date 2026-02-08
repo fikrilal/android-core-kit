@@ -2,6 +2,34 @@
 
 Starter/base Android project intended to be **cloned per app** and scaled based on the project’s needs.
 
+## Locked decisions (template constraints)
+
+These are **intentional constraints** for production readiness and consistency across future clones:
+
+- Environments: **dev** and **prod** only.
+- Flavor differences (for now): **only**:
+  - `applicationIdSuffix` (dev only)
+  - `BuildConfig.BASE_URL`
+- DI: **Hilt** (app module is the composition root).
+- Annotation processing: **KSP-first** for Hilt.
+  - Current AGP built-in Kotlin requires `android.disallowKotlinSourceSets=false` (temporary workaround; see `gradle.properties`).
+- Toolchain: **JDK 17** + Gradle wrapper (`./gradlew`).
+- Formatting: **Spotless + ktlint** (to be wired into `./gradlew verify`).
+- Static analysis: **Detekt** (to be wired into `./gradlew verify`).
+- CI baseline: **GitHub Actions** runs `./gradlew verify` on push/PR.
+
+Tracking docs:
+
+- Repository goal and scope: `REPO_GOAL.md`
+- Foundation proposal: `_WIP/foundation-engineering-proposal.md`
+- Foundation TODO: `_WIP/2026-02-01_foundation_implementation_todo.md`
+- P0 execution TODO (foundation + auth e2e): `_WIP/2026-02-07_p0_foundation_auth_e2e_todo.md`
+
+## Verification
+
+- Local/CI baseline: `./gradlew verify`
+- WSL convenience wrapper: `tool/agent/winrun --no-stdin -- ./gradlew.bat verify`
+
 ## Architecture
 
 See `docs/android-architecture-guide.md`.
@@ -12,4 +40,3 @@ These repos are used as references while evolving this starter template:
 
 - Backend contracts: `/mnt/c/Development/_CORE/backend-core-kit`
 - Flutter mobile core kit (stable reference): `/mnt/c/Development/_CORE/mobile-core-kit`
-

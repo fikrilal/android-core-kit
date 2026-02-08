@@ -2,6 +2,8 @@ package dev.fikril.androidcorekit.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -10,13 +12,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import dev.fikril.androidcorekit.core.session.SessionState
+import dev.fikril.androidcorekit.feature.auth.presentation.login.LoginRoute
 import dev.fikril.androidcorekit.feature.home.HomeScreen
 import dev.fikril.androidcorekit.feature.home.navigation.HomeDestination
 import dev.fikril.androidcorekit.feature.profile.ProfileScreen
@@ -24,7 +30,45 @@ import dev.fikril.androidcorekit.feature.profile.navigation.ProfileDestination
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AndroidCoreKitRoot(modifier: Modifier = Modifier) {
+fun AndroidCoreKitRoot(
+    modifier: Modifier = Modifier,
+    viewModel: AppRootViewModel = hiltViewModel(),
+) {
+    val sessionState by viewModel.sessionState.collectAsState()
+
+    when (sessionState) {
+        SessionState.Unknown -> {
+            Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
+                CircularProgressIndicator(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                            .wrapContentSize(),
+                )
+            }
+        }
+        SessionState.Unauthenticated -> {
+            Scaffold(
+                modifier = modifier.fillMaxSize(),
+                topBar = {
+                    TopAppBar(title = { Text(text = "Sign In") })
+                },
+            ) { innerPadding ->
+                LoginRoute(
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+        }
+        is SessionState.Authenticated -> {
+            AuthenticatedRoot(modifier = modifier)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AuthenticatedRoot(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val topLevelDestinations = listOf(homeTopLevelDestination, profileTopLevelDestination)
 
